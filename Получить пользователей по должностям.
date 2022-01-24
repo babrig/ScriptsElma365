@@ -21,3 +21,5 @@ Async function getUsersOnPosition(positionId: OrganisationStructureItem): Promis
 Получить должность по ёё названию.
 
 const position = await System.organisationStructure.search().where((f,c) => c.fts(<position_name>)).first()
+
+
