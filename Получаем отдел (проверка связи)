@@ -1,0 +1,35 @@
+async function getDepartmentRecursive(item: OrganisationStructureItem|undefined){
+    //Баг, getParent() не работает в обще не как, а должен согласно справки!!!!! https://tssdk.elma365.com/ru/interfaces/_dts_01_items_.organisationstructureitem.html
+    //убил дофига времени, думал я дурак, но нет.
+    //let parent = item.getParent();
+
+    //ну тогда выкручиваемся как можем
+    //смотрю id родительского элемента
+        let parent_id = item?.data.parent ?? '';
+        // проверяю что id родителя присутствовал в записи
+        if (parent_id && parent_id.length>0){
+            // поиск по дереву орг структуры элемента с этим id
+            const parent_position = await System.organisationStructure.search().where(item=>item.__id.eq(parent_id)).first();
+            // найден ли
+            if (parent_position){
+                // если это департамент
+                if (parent_position.isDepartment()){
+                    // если в поле уже что то записано, ну то есть человек состоит не в одном подразделении
+                    if (Context.data.department){
+                        // берём то что было в поле и добавляем новое через запятую (сделать через массивы так же как в должности не вышло по некоторым причинам, я хз, главное работает)
+                        //Context.data.department = Context.data.department+', '+parent_position.data.name?.replace(/\n/g, ' ');
+                        Context.data.department = Context.data.department+', '+parent_position.data.name;
+                    } else {
+                        // если в поле пусто, то просто вносим запись
+                        //Context.data.department = parent_position.data.name?.replace(/\n/g, ' ');
+                        Context.data.department = parent_position.data.name;
+                    }
+                } else {
+                    // если это не департамент, то поднимаемся выше, через вызыв функции самой себя, указав текущий уровень.
+                    getDepartmentRecursive(parent_position);
+                }
+            } else {
+                
+            }
+        } 
+}
